@@ -1,0 +1,38 @@
+{  
+  "project":{  
+    "subnets":[  
+      "805a652a-2961-43b0-a534-b731ce481983",
+      "3964cc4a-044b-41f2-acdf-0cc5551b959d",
+      "7febb9bd-6e18-4b39-928f-f9442e23af00"
+    ],
+    "project_name":"SHOULD BE PROVIDED",
+    "project_description":"vasya"
+  },
+  "acp":{  
+    "acp_role":"SHOULD BE PROVIDED",
+    "acp_user_reference_list":[  
+      "SHOULD BE PROVIDED"
+    ],
+    "acp_name":"SHOULD BE PROVIDED",
+    "acp_description":"acp created by custom script",
+    "acp_project_uuid":"",
+    "acp_user_group_reference_list":[  
+
+    ]
+  },
+  "project_update":{  
+    "user_reference_list":[  
+
+    ],
+    "spec_version":0,
+    "uuid":"",
+    "user_group_reference_list":[  
+
+    ]
+  },
+  "general":{  
+    "username":"admin",
+    "password":"Nutanix/1234",
+    "pc_ip":"10.10.10.10"
+  }
+}

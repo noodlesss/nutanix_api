@@ -1,0 +1,115 @@
+Creating Project via v3 Rest API(script in this tutorial has been tested on python2.7)
+
+To create project we need to follow 3 steps:
+ 1. Creating project with 'network ids', 'name' etc.
+ 2. Creating user/user_group
+   NOTE: This step can be skiped if user/user_group already exists. To do so enter 'nuclei' from PC cli. Enter 'user.list' or 'user_group.list' and see if user exists.
+ 3. Creating Access Control Policy and assigning to early user/user_grooup
+ 4. Modifying Project to associate with created Access Control Policy
+
+The attached script will help to apply above steps.
+To run the script copy <<project_data.json>> file and <<create_project_v3.py>> file to machine where from you can access PC ip. Files should be located in same directory.
+1. To create Porject we need to modify <<project_data.json>> file. Required parameters 'subnets' and 'project_name'. All params should be inserted in below format: 
+  This is project part of config:
+    "project":{  
+    "subnets":[  
+      "805a652a-2961-43b0-a534-b731ce481983",
+      "3964cc4a-044b-41f2-acdf-0cc5551b959d",
+      "7febb9bd-6e18-4b39-928f-f9442e23af00"
+    ],
+    "project_name":"SHOULD BE PROVIDED",
+    "project_description":"baku"
+  }
+ Then run script as below:
+   python create_project_v3.py --action project_create
+ Script should send api call to create project with parameters in <<project_data.json>> file. If call successful return parameters will include newly created project id. Before exiting script will print result to command line and modify <<projecet_data.json>> file to include project id for further use. Check the Prism task list to ensure that project created. In case of error, same will be printed. 
+2. Now we have project created let's create Access Control Policy using same script. But first we need to add required parameters to <<project_data.json>> file. Here is the required parameters for ACP:
+  - Role uuid(acp_role). Role uuid applies one of default rules to SSP user/user_group. To get Role uuid run below command from PC cli:
+	    {noformat}
+	    nutanix@NTNX-10-64-35-40-A-CVM:~$ nuclei role.list
+		2018/10/17 13:41:37 Connected to 10.64.35.40:9876
+		2018/10/17 13:41:37 Authenticating connection 0x0
+		2018/10/17 13:41:37 nuclei is attempting to connect to Zookeeper
+		2018/10/17 13:41:37 Authenticated: id=0x1666879c077d259, timeout=20000
+		"Total Entities : 9"
+		"Length : 9"
+		"Offset : 0"
+		"Entities :"
+		Name                  UUID                                  State     
+		Consumer              d5f9501c-2cd0-4714-9036-de19e203e057  COMPLETE  
+		Developer             16e8cbd8-bae5-4e4b-b60d-1692c929b85a  COMPLETE  
+		Internal Super Admin  8c617828-88f2-45da-ba96-bfe8b4dd2c3c  COMPLETE  
+		Operator              14b54da2-95ca-4a70-ad75-190028e38c8d  COMPLETE  
+		Prism Admin           edc2691a-cb96-4d6e-8d02-a21ec0155740  COMPLETE  
+		Prism Viewer          922f0aba-e308-4aa7-818c-c7b07bfbfef7  COMPLETE  
+		Project Admin         855c3150-990e-4eff-a56f-938a54e52935  COMPLETE  
+		Self-Service Admin    f1919837-3e8e-4da2-9dfa-76224b63ae7c  COMPLETE  
+		Super Admin           f26ce6d6-73cc-4b24-9d15-3e4b6c537de9  COMPLETE  
+		nutanix@NTNX-10-64-35-40-A-CVM:~$ 
+	    {noformat}
+    Copy uuid of the role and add to config file as below:
+	    {noformat}
+	    "acp":{  
+	    "acp_role":"16e8cbd8-bae5-4e4b-b60d-1692c929b85a",
+	    "acp_user_reference_list":[  
+	      "REQUIRED"
+	    ],
+	    "acp_name":"REQUIRED",
+	    "acp_description":"acp created by custom script",
+	    "acp_project_uuid":"",
+	    "acp_user_group_reference_list":[  
+
+	    ]
+	    }
+	    {noformat}
+
+  - user_reference_list or user_group_reference_list . Let's say we need to associate user with the project. To check if user exists run below from PC:
+        {noformat}
+        nutanix@NTNX-10-64-35-40-A-CVM:~$ nuclei user.list
+		2018/10/17 13:46:45 Connected to 10.64.35.40:9876
+		2018/10/17 13:46:45 Authenticating connection 0x0
+		2018/10/17 13:46:45 nuclei is attempting to connect to Zookeeper
+		2018/10/17 13:46:45 Authenticated: id=0x1666879c077d279, timeout=20000
+		"Total Entities : 8"
+		"Length : 8"
+		"Offset : 0"
+		"Entities :"
+		Name                                  UUID                                  State     
+		00052c80-729d-8705-0000-0000000051fa  1068a34b-898b-59c1-9b18-73d0bb4da75c  COMPLETE  
+		000539a5-ea6c-b225-0000-000000002af8  abc47322-5afe-5b1f-a7c5-9da15ac58a0f  COMPLETE  
+		admin                                 00000000-0000-0000-0000-000000000000  COMPLETE  
+		alex@emea.nutanix.com                 4d5762d5-d1be-58ef-b84c-ac421ba9fdc3  COMPLETE  
+		atul                                  e6d8466a-cd06-504f-8314-e760fd7233f7  COMPLETE  
+		martin                                c9b1747c-cbb4-5c66-ae47-09a1c88533a4  COMPLETE  
+		nuran.afrasiyabov@emea.nutanix.com    9badc8c8-ccda-5133-a2d0-019aa346db8a  COMPLETE  
+		sergei_local                          8b9161d2-88ee-5375-8983-6ba7af3e4c36  COMPLETE  
+		nutanix@NTNX-10-64-35-40-A-CVM:~$ 
+        {noformat}
+     If user exists then follow below: 
+     Copy uuid of required Domain user to <<project_data.json>> file as below:
+     	{noformat}
+	    "acp":{  
+	    "acp_role":"16e8cbd8-bae5-4e4b-b60d-1692c929b85a",
+	    "acp_user_reference_list":[  
+	      "9badc8c8-ccda-5133-a2d0-019aa346db8a"
+	    ],
+	    "acp_name":"REQUIRED",
+	    "acp_description":"acp created by custom script",
+	    "acp_project_uuid":"",
+	    "acp_user_group_reference_list":[  
+
+	    ]
+	    }
+	    {noformat}
+	 If user does not exists. We need to create user. 
+	 ############### NEED TO BE FILLED ###################
+  Also its good to add name. "acp_project_uuid" field should have been filled during project creation step. 
+  Now we have all fields filled, run script as below:
+   python create_project_v3.py --action acp_create
+  Check if api call was successfull as in first step
+
+3. Now let's update project and associate with user. At this moment no need to modify <<project_data.json>> file. Run script as below:
+  python create_project_v3.py --action project_update
+
+If all above steps were successful you should have a Project assocciated with selected subnets, role and users
+
