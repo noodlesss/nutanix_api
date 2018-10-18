@@ -30,9 +30,13 @@
 
     ]
   },
+  "user": {
+    "directory_service_uuid": "a2563f24-9987-4d4f-b60f-0e0165245bf9",
+    "user_name": "nuran"
+  },
   "general":{  
     "username":"admin",
     "password":"Nutanix/1234",
-    "pc_ip":"10.10.10.10"
+    "pc_ip":"10.64.35.40"
   }
 }

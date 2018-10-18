@@ -1,4 +1,5 @@
 import requests, json, argparse, sys
+from pprint import pprint
 
 # To create Porject:
 # call script from command line with "--action project_create"
@@ -138,6 +139,26 @@ project_update = {
 }
 
 
+user_query_specs = {
+  "query": "<group_name_to_be_searched>",
+  "returned_attribute_list": ["memberOf", "member", "userPrincipalName", "distinguishedName"],
+  "searched_attribute_list": ["name", "userPrincipalName", "distinguishedName"]
+}
+
+user_create_specs = {
+    "spec": {
+        "resources": {
+            "directory_service_user_group": {
+                "distinguished_name": "<distinguished_name_from_step_2>"
+            }
+        }
+    }, 
+    "metadata": {
+        "kind": "user_group"
+    }
+}
+
+
 class nutanixApi(object):
     def __init__(self, base_url, username, password):
         self.base_url = base_url
@@ -167,6 +188,15 @@ class nutanixApi(object):
         s.headers.update({'Content-Type': 'application/json; charset=utf-8'})
         data = s.put(self.base_url + 'projects/%s' %project_uuid, json=body, verify=False)
         return data
+    
+    def user_query(self, directory_service_uuid, body):
+        requests.packages.urllib3.disable_warnings()
+        s = requests.Session()
+        s.auth = (self.username, self.password)
+        s.headers.update({'Content-Type': 'application/json; charset=utf-8'})
+        data = s.post(self.base_url + 'directory_services/%s/search' %directory_service_uuid, json=body, verify=False)
+        return data
+
 
 def body_generator(bodyname, project_data):
     if bodyname == 'project_create':
@@ -214,6 +244,10 @@ def body_generator(bodyname, project_data):
             subnets_list.append({'kind': 'subnet', 'uuid': i})
         project_update['spec']['resources']['subnet_reference_list'] = subnets_list
         return project_update
+    elif bodyname == 'user_query':
+        user_query_specs['query'] = project_data['user']['user_name']
+        return user_query_specs
+
 
 
 
@@ -265,6 +299,14 @@ def main():
         except Exception as e:
             print ('error: %s' %e)
         print (data)
+    elif command == 'user_query':
+      directory_service_uuid = project_data['user']['directory_service_uuid']
+      data = project.user_query(directory_service_uuid, body)
+      try:
+          data = data.json()
+      except Exception as e:
+          print ('error: %s' %e)
+      pprint(data)
     else:
         print ('wrong command, try one of this: project_create, project_update, acp_create')
         sys.exit(1)
